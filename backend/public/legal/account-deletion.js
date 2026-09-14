@@ -59,6 +59,13 @@
   if (!form) return;
   const status = root.document.getElementById('deletion-status');
   const button = root.document.getElementById('delete-submit');
+  if (!root.WASSA_LEGAL_CONFIG?.apiBaseUrl || root.WASSA_LEGAL_CONFIG.deletionEnabled === false) {
+    for (const field of form.elements) field.disabled = true;
+    status.textContent =
+      'Vista previa: el formulario de eliminación todavía no está activo. No introduzcas credenciales.';
+    button.textContent = 'Pendiente de configuración';
+    return;
+  }
   let busy = false;
   form.addEventListener('submit', async (event) => {
     event.preventDefault();

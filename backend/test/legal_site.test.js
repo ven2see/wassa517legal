@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const vm = require('node:vm');
 const { build } = require('../scripts/build-legal-site');
 const { deleteAccount } = require('../public/legal/account-deletion');
 const config = {
@@ -42,6 +43,56 @@ test('no se genera una publicación con identidad, retención o URL del backend 
   ])
     assert.throws(() => build({ config: { ...config, [key]: '' }, output: '/unused' }));
   assert.throws(() => build({ config: { ...config, apiBaseUrl: 'http://localhost:3000/api' } }));
+});
+test('Pages puede publicar una vista previa con rutas del repositorio y borrado deshabilitado', () => {
+  const output = fs.mkdtempSync(path.join(os.tmpdir(), 'wassa-legal-preview-'));
+  try {
+    const urls = build({
+      config: { ...config, legalBusinessName: '' },
+      allowPreview: true,
+      output,
+    });
+    assert.equal(urls.draft, true);
+    assert.equal(urls.privacy_url, 'https://example.github.io/wassa517/privacy/');
+    const home = fs.readFileSync(path.join(output, 'index.html'), 'utf8');
+    assert.match(home, /todavía no están listas para Play Store/);
+    const deletion = fs.readFileSync(path.join(output, 'account/delete/index.html'), 'utf8');
+    assert.match(deletion, /name="password"[^>]*disabled/);
+    assert.match(deletion, /Pendiente de configuración/);
+    const browserConfig = fs.readFileSync(path.join(output, 'assets/legal-config.js'), 'utf8');
+    assert.match(browserConfig, /"apiBaseUrl":""/);
+    assert.match(browserConfig, /"deletionEnabled":false/);
+    assert.ok(!browserConfig.includes(config.apiBaseUrl));
+  } finally {
+    fs.rmSync(output, { recursive: true, force: true });
+  }
+});
+test('permitir una vista previa no oculta una URL inválida cuando la configuración está completa', () => {
+  assert.throws(() =>
+    build({ config: { ...config, apiBaseUrl: 'http://localhost:3000/api' }, allowPreview: true }),
+  );
+});
+test('el navegador no admite credenciales ni instala el envío mientras el borrado esté deshabilitado', () => {
+  const fields = [{ disabled: false }, { disabled: false }];
+  let handlers = 0;
+  const form = { elements: fields, addEventListener: () => handlers++ };
+  const status = {};
+  const button = {};
+  const window = {
+    WASSA_LEGAL_CONFIG: { apiBaseUrl: config.apiBaseUrl, deletionEnabled: false },
+    document: {
+      getElementById: (id) =>
+        ({ 'delete-account-form': form, 'deletion-status': status, 'delete-submit': button })[id],
+    },
+  };
+  vm.runInNewContext(
+    fs.readFileSync(path.join(__dirname, '../public/legal/account-deletion.js'), 'utf8'),
+    { window },
+  );
+  assert.ok(fields.every((field) => field.disabled));
+  assert.equal(handlers, 0);
+  assert.match(status.textContent, /No introduzcas credenciales/);
+  assert.equal(button.textContent, 'Pendiente de configuración');
 });
 test('el formulario autentica, borra con JWT efímero y solo confirma un 204 del backend', async () => {
   const calls = [];

@@ -72,7 +72,7 @@ function page(title, body, config = {}, options = {}) {
     ? `<script src="${escape(options.basePath || '')}/assets/legal-config.js" defer></script><script src="${escape(options.basePath || '')}/assets/account-deletion.js" defer></script>`
     : '';
   const draft = options.preview
-    ? '<aside class="draft" role="note">Borrador para revisión. Completa el responsable, contacto y conservación antes de publicarlo.</aside>'
+    ? '<aside class="draft" role="note">Borrador para revisión. Faltan datos del responsable, contacto, conservación o Railway. Estas páginas todavía no están listas para Play Store.</aside>'
     : '';
   const csp = options.staticSite
     ? `<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self'; style-src 'self'; script-src 'self'; connect-src 'self' ${escape(options.apiOrigin || '')}; base-uri 'self'; form-action 'none'; object-src 'none'">`
@@ -94,16 +94,21 @@ function privacyPage(config, options = {}) {
 }
 function deletionForm(config = {}, options = {}) {
   const path = links(options);
+  const pending = options.preview && options.clientDeletion;
+  const disabled = pending ? ' disabled' : '';
+  const lead = pending
+    ? 'Vista previa del proceso de eliminación. El formulario estará disponible cuando se complete la configuración del servicio.'
+    : 'Puedes hacerlo aquí sin instalar la app. Confirma tu identidad y el servidor eliminará tus datos.';
   const error = options.error
     ? `<p class="notice error" role="alert">${escape(options.error)}</p>`
     : '';
   const noScript = options.clientDeletion
     ? `<noscript><p class="notice error">Activa JavaScript para utilizar el formulario, o solicita ayuda a ${contact(config)}. No envíes tu contraseña por correo.</p></noscript>`
     : '';
-  const form = `${noScript}<form id="delete-account-form" method="post" action="${path.deletion}" autocomplete="on"><label for="email">Correo de tu cuenta</label><input id="email" name="email" type="email" autocomplete="username" maxlength="255" required><label for="password">Contraseña actual</label><input id="password" name="password" type="password" autocomplete="current-password" required><label class="check"><input name="confirmation" type="checkbox" value="DELETE" required><span>Entiendo que se eliminarán mi cuenta y sus datos de Wassa517.</span></label><p id="deletion-status" class="status" role="status" aria-live="polite"></p><button id="delete-submit" type="submit">Eliminar cuenta y datos</button></form>`;
+  const form = `${noScript}<form id="delete-account-form" method="post" action="${path.deletion}" autocomplete="on"><label for="email">Correo de tu cuenta</label><input id="email" name="email" type="email" autocomplete="username" maxlength="255" required${disabled}><label for="password">Contraseña actual</label><input id="password" name="password" type="password" autocomplete="current-password" required${disabled}><label class="check"><input name="confirmation" type="checkbox" value="DELETE" required${disabled}><span>Entiendo que se eliminarán mi cuenta y sus datos de Wassa517.</span></label><p id="deletion-status" class="status" role="status" aria-live="polite">${pending ? 'El formulario de eliminación todavía no está activo.' : ''}</p><button id="delete-submit" type="submit"${disabled}>${pending ? 'Pendiente de configuración' : 'Eliminar cuenta y datos'}</button></form>`;
   return page(
     'Eliminar cuenta',
-    `<section class="hero"><span class="eyebrow">EL CONTROL ES TUYO</span><h1>Eliminar tu cuenta de Wassa517</h1><p class="lead">Puedes hacerlo aquí sin instalar la app. Confirma tu identidad y el servidor eliminará tus datos.</p></section><div class="deletion-grid"><section class="card"><h2>Qué se elimina</h2><ul class="checks"><li>Cuenta y catálogo de productos.</li><li>Configuración y conexión del número.</li><li>Conversaciones y mensajes guardados.</li><li>Reportes de IA y trabajos pendientes.</li></ul><p>El borrado de la base de datos activa es inmediato al confirmarse y no se puede deshacer.</p><p class="notice">No borra mensajes que ya estén en WhatsApp ni cancela suscripciones externas. Consulta los plazos de copias y proveedores en <a href="${path.privacy}">privacidad</a>.</p><h3>También desde la app</h3><p>Abre Configuración → Eliminar mi cuenta e introduce la contraseña.</p></section><section class="card"><h2>Confirma tu cuenta</h2><p>Usa el mismo correo y contraseña que utilizas en Wassa517.</p>${error}${form}<p class="help">¿No puedes acceder? Contacta con ${contact(config)} para una solicitud verificada. No envíes tu contraseña por correo.</p></section></div>`,
+    `<section class="hero"><span class="eyebrow">EL CONTROL ES TUYO</span><h1>Eliminar tu cuenta de Wassa517</h1><p class="lead">${lead}</p></section><div class="deletion-grid"><section class="card"><h2>Qué se elimina</h2><ul class="checks"><li>Cuenta y catálogo de productos.</li><li>Configuración y conexión del número.</li><li>Conversaciones y mensajes guardados.</li><li>Reportes de IA y trabajos pendientes.</li></ul><p>El borrado de la base de datos activa es inmediato al confirmarse y no se puede deshacer.</p><p class="notice">No borra mensajes que ya estén en WhatsApp ni cancela suscripciones externas. Consulta los plazos de copias y proveedores en <a href="${path.privacy}">privacidad</a>.</p><h3>También desde la app</h3><p>Abre Configuración → Eliminar mi cuenta e introduce la contraseña.</p></section><section class="card"><h2>Confirma tu cuenta</h2><p>${pending ? 'Este formulario está deshabilitado durante la vista previa.' : 'Usa el mismo correo y contraseña que utilizas en Wassa517.'}</p>${error}${form}<p class="help">¿No puedes acceder? Contacta con ${contact(config)} para una solicitud verificada. No envíes tu contraseña por correo.</p></section></div>`,
     config,
     options,
   );

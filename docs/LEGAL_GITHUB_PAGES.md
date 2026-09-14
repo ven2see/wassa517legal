@@ -31,7 +31,10 @@ HTML; Railway ejecuta la autenticación y el borrado. No se ha publicado el siti
    obtiene el dominio y la ruta del repositorio automáticamente desde GitHub.
 
 La generación de producción requiere responsable, correo, conservación y ambas
-URLs válidas. La vista previa tiene avisos de borrador. No se inventaron datos
+URLs válidas. El workflow publica una vista previa marcada como borrador si faltan datos.
+En esa vista, el formulario de eliminación está deshabilitado y no admite credenciales.
+No uses esos documentos en Play Console hasta completar la configuración y comprobar
+`draft: false` en `urls.json`. No se inventaron datos
 de contacto ni plazos. Revisa que el texto de conservación describa tus
 prácticas efectivas antes de publicarlo.
 

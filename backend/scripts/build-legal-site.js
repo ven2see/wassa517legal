@@ -21,8 +21,18 @@ function publicUrl(value, api = false) {
 function build({
   config = {},
   preview = false,
+  allowPreview = false,
   output = path.join(root, 'release/legal-site'),
 } = {}) {
+  config = { ...config };
+  const missingConfiguration = [
+    'legalBusinessName',
+    'supportEmail',
+    'dataRetentionDetails',
+    'apiBaseUrl',
+    'siteBaseUrl',
+  ].some((key) => !String(config[key] || '').trim());
+  preview = preview || (allowPreview && missingConfiguration);
   if (!preview) {
     if (!documents.ready(config))
       throw new Error('Completa LEGAL_BUSINESS_NAME, SUPPORT_EMAIL y DATA_RETENTION_DETAILS.');
@@ -38,7 +48,7 @@ function build({
     staticSite: true,
     preview,
     basePath,
-    apiOrigin: config.apiBaseUrl ? new URL(config.apiBaseUrl).origin : '',
+    apiOrigin: !preview && config.apiBaseUrl ? new URL(config.apiBaseUrl).origin : '',
   };
   fs.mkdirSync(output, { recursive: true });
   const pages = {
@@ -65,7 +75,10 @@ function build({
   fs.writeFileSync(
     path.join(output, 'assets/legal-config.js'),
     'window.WASSA_LEGAL_CONFIG = ' +
-      JSON.stringify({ apiBaseUrl: config.apiBaseUrl || '' }).replace(/</g, '\\u003c') +
+      JSON.stringify({
+        apiBaseUrl: preview ? '' : config.apiBaseUrl || '',
+        deletionEnabled: !preview,
+      }).replace(/</g, '\\u003c') +
       ';\n',
   );
   fs.writeFileSync(path.join(output, '.nojekyll'), '');
@@ -107,7 +120,11 @@ function main() {
     siteBaseUrl: 'WASSA_LEGAL_SITE_URL',
   }))
     if (process.env[name]) config[key] = process.env[name].trim();
-  const urls = build({ config, preview: process.argv.includes('--preview') });
+  const urls = build({
+    config,
+    preview: process.argv.includes('--preview'),
+    allowPreview: process.argv.includes('--allow-preview'),
+  });
   console.log(JSON.stringify(urls, null, 2));
 }
 if (require.main === module) {

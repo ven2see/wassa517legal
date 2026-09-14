@@ -18,7 +18,7 @@ GitHub Pages aloja las páginas; la API de Railway verifica y elimina la cuenta.
 3. En Railway añade `https://ven2see.github.io` a `CORS_ORIGINS`, sin la ruta del repositorio, y configura también las tres variables legales.
 4. En Actions ejecuta “Publicar privacidad y cuentas en GitHub Pages” desde `main`.
 
-La generación requiere los datos reales. No publica automáticamente una política con campos vacíos.
+El workflow genera el HTML y publica una vista previa marcada como borrador si faltan datos. En esa vista el formulario de eliminación está deshabilitado y no admite credenciales. Para usar los documentos en Play Console, completa las variables y comprueba `draft: false` en el `urls.json` público. El comando de generación sin `--allow-preview` sigue rechazando una configuración incompleta.
 
 ## Direcciones previstas después de publicar
 

@@ -24,19 +24,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+      - name: Probar el generador y la eliminación
+        run: node --test backend/test/legal_site.test.js
       - name: Configurar Pages
         id: pages
         uses: actions/configure-pages@v5
-      - name: Probar el generador y la eliminación
-        run: node --test backend/test/legal_site.test.js
-      - name: Generar páginas con datos reales
+      - name: Generar páginas o vista previa si faltan datos
         env:
           LEGAL_BUSINESS_NAME: ${{ vars.LEGAL_BUSINESS_NAME }}
           SUPPORT_EMAIL: ${{ vars.SUPPORT_EMAIL }}
           DATA_RETENTION_DETAILS: ${{ vars.DATA_RETENTION_DETAILS }}
           WASSA_API_BASE_URL: ${{ vars.WASSA_API_BASE_URL }}
           WASSA_LEGAL_SITE_URL: ${{ steps.pages.outputs.base_url }}
-        run: node backend/scripts/build-legal-site.js
+        run: node backend/scripts/build-legal-site.js --allow-preview
       - name: Empaquetar solo el sitio público
         uses: actions/upload-pages-artifact@v4
         with:
