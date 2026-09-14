@@ -1,0 +1,53 @@
+name: Publicar privacidad y cuentas en GitHub Pages
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/src/legal/**'
+      - 'backend/public/legal/**'
+      - 'backend/scripts/build-legal-site.js'
+      - 'backend/test/legal_site.test.js'
+      - '.github/workflows/legal-pages.yml'
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: legal-pages
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Configurar Pages
+        id: pages
+        uses: actions/configure-pages@v5
+      - name: Probar el generador y la eliminación
+        run: node --test backend/test/legal_site.test.js
+      - name: Generar páginas con datos reales
+        env:
+          LEGAL_BUSINESS_NAME: ${{ vars.LEGAL_BUSINESS_NAME }}
+          SUPPORT_EMAIL: ${{ vars.SUPPORT_EMAIL }}
+          DATA_RETENTION_DETAILS: ${{ vars.DATA_RETENTION_DETAILS }}
+          WASSA_API_BASE_URL: ${{ vars.WASSA_API_BASE_URL }}
+          WASSA_LEGAL_SITE_URL: ${{ steps.pages.outputs.base_url }}
+        run: node backend/scripts/build-legal-site.js
+      - name: Empaquetar solo el sitio público
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: release/legal-site
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publicar Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
