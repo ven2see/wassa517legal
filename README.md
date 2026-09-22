@@ -44,7 +44,7 @@ Abre http://localhost:8087. La vista previa indica los datos pendientes; el form
 
 ## Eliminación
 
-El formulario solicita correo, contraseña y confirmación. Autentica con `/api/auth/login` y después llama a `DELETE /api/users/me`. Solo muestra éxito cuando el backend confirma `204`. El JWT se utiliza durante la solicitud y no se guarda en cookies o almacenamiento local. No cancela suscripciones externas ni retira mensajes ya entregados en WhatsApp.
+El formulario solicita correo, contraseña y confirmación. Autentica con `/api/auth/login` y después llama a `DELETE /api/users/me`. Solo muestra éxito cuando el backend confirma `204`. El JWT se utiliza durante la solicitud y no se guarda en cookies o almacenamiento local. No cancela suscripciones externas ni retira mensajes o comentarios ya entregados por WhatsApp, Messenger o Instagram.
 
 No incluyas credenciales de PostgreSQL, claves de OpenAI/Meta o secretos JWT en este repositorio. Los únicos datos configurados para el sitio son públicos.
 
